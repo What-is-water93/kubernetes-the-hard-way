@@ -41,3 +41,91 @@ resource "hcloud_server" "this" {
     hcloud_network_subnet.this
   ]
 }
+
+resource "hcloud_firewall" "k8s_nodes" {
+  name = "private_network"
+
+  rule {
+    direction  = "in"
+    port       = "any"
+    protocol   = "tcp"
+    source_ips = [hcloud_network.this.ip_range]
+  }
+
+  rule {
+    direction  = "in"
+    port       = "any"
+    protocol   = "udp"
+    source_ips = [hcloud_network.this.ip_range]
+  }
+
+  rule {
+    direction  = "in"
+    protocol   = "icmp"
+    source_ips = [hcloud_network.this.ip_range]
+  }
+
+  rule {
+    direction       = "out"
+    port            = "any"
+    protocol        = "tcp"
+    destination_ips = ["0.0.0.0/0", "::/0"]
+  }
+
+  rule {
+    direction       = "out"
+    port            = "any"
+    protocol        = "udp"
+    destination_ips = ["0.0.0.0/0", "::/0"]
+  }
+
+  rule {
+    direction       = "out"
+    protocol        = "icmp"
+    destination_ips = ["0.0.0.0/0", "::/0"]
+  }
+}
+
+resource "hcloud_firewall_attachment" "this" {
+  firewall_id = hcloud_firewall.k8s_nodes.id
+  server_ids  = [for server_name, server_config in hcloud_server.this : server_config.id if server_name != "jumphost"]
+}
+
+resource "hcloud_firewall" "jumphost" {
+  name = "jumphost"
+
+  rule {
+    direction = "in"
+    port      = "22"
+    protocol  = "tcp"
+    source_ips = [
+      "0.0.0.0/0",
+      "::/0"
+    ]
+  }
+
+  rule {
+    direction       = "out"
+    port            = "any"
+    protocol        = "tcp"
+    destination_ips = ["0.0.0.0/0", "::/0"]
+  }
+
+  rule {
+    direction       = "out"
+    port            = "any"
+    protocol        = "udp"
+    destination_ips = ["0.0.0.0/0", "::/0"]
+  }
+
+  rule {
+    direction       = "out"
+    protocol        = "icmp"
+    destination_ips = ["0.0.0.0/0", "::/0"]
+  }
+}
+
+resource "hcloud_firewall_attachment" "jumphost" {
+  firewall_id = hcloud_firewall.jumphost.id
+  server_ids  = [hcloud_server.this["jumphost"].id]
+}
