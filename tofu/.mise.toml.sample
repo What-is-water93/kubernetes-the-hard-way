@@ -1,0 +1,7 @@
+[env]
+HCLOUD_TOKEN = 'token'
+TF_VAR_state_password = 'state_password'
+
+[tools]
+opentofu = "1.9.1"
+terragrunt = "0.80.2"

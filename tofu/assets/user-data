@@ -1,0 +1,14 @@
+#cloud-config
+
+write_files:
+  - path: /etc/ssh/sshd_config.d/99-disable-password.conf
+    content: |
+      PasswordAuthentication no
+      ChallengeResponseAuthentication no
+
+      PubkeyAuthentication yes
+      AuthorizedKeysFile .ssh/authorized_keys
+
+      MaxAuthTries 5
+    permissions: '0644'
+    owner: root:root
