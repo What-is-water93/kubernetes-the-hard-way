@@ -2,7 +2,8 @@ locals {
   servers = toset([
     "server",
     "node-0",
-    "node-1"
+    "node-1",
+    "jumphost"
   ])
 }
 
